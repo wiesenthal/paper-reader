@@ -1,12 +1,10 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   webpack: (config) => {
-    // Add support for PDF.js and other binary files
+    // Support for PDF.js and other libraries
     config.resolve.alias.canvas = false;
     config.resolve.alias.encoding = false;
-
-    // Return the modified config
+    
     return config;
   },
 };

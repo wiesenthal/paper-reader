@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PDF Paper Reader with AI
+
+A Next.js application for uploading and reading PDFs, with an integrated AI assistant powered by LLMs.
+
+## Features
+
+- Upload and view PDF documents
+- Text highlighting and selection
+- Ask questions about the document context
+- Multiple AI model support (OpenAI, Anthropic, Cerebras)
+- Real-time streaming responses
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (v18 or later)
+- API keys for LLM providers (OpenAI, Anthropic, Cerebras)
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Copy `.env.example` to `.env.local` and add your API keys:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` and add your API keys:
+
+```
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here 
+CEREBRAS_API_KEY=your_cerebras_api_key_here
+```
+
+### Development
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) to use the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How It Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Upload a PDF document through the drag-and-drop interface
+2. The document is processed on the server to extract text
+3. View the PDF in the document viewer
+4. Highlight text to focus on specific sections
+5. Ask questions through the chat interface
+6. The AI uses the document content and highlighted text as context to answer questions
 
-## Learn More
+## Technologies Used
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js 14 (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- react-pdf for PDF rendering
+- pdf-parse for text extraction
+- Vercel AI SDK
+- Various LLM providers (OpenAI, Anthropic, Cerebras)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
