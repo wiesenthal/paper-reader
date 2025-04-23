@@ -1,6 +1,7 @@
-# PDF Paper Reader with AI
+Read a PDF paper and highlight sections to get integrated explanations.
 
-A Next.js application for uploading and reading PDFs, featuring an AI assistant that provides explanations for selected text passages.
+<img width="1718" alt="image" src="https://github.com/user-attachments/assets/e2959d4b-a254-4e2e-83f9-d8a2d9d31da4" />
+
 
 ## Features
 
