@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import PdfUploader from "@/components/PdfUploader";
 import PdfViewer from "@/components/PdfViewer";
 import ChatInterface from "@/components/ChatInterface";
@@ -75,7 +75,7 @@ export default function Home() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "claude-3-7-sonnet",
+              moœdel: "claude-3-7-sonnet",
               messages: messagesForExplanation,
             }),
             signal: controller.signal,
