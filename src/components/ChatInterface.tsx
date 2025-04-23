@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { modelNames, ModelName } from "@/lib/ai/models";
 import ReactMarkdown from "react-markdown";
 
 type ChatInterfaceProps = {
   pdfText: string | null;
   selectedText: string | null;
+  initialExplanation: string | null;
+  isLoading: boolean;
 };
 
 type Message = {
@@ -17,12 +19,24 @@ type Message = {
 export default function ChatInterface({
   pdfText,
   selectedText,
+  initialExplanation,
+  isLoading,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [selectedModel, setSelectedModel] =
     useState<ModelName>("claude-3-7-sonnet");
+
+  useEffect(() => {
+    if (initialExplanation) {
+      setMessages([{ role: "assistant", content: initialExplanation }]);
+    } else {
+      // Optional: Clear messages if explanation is cleared (e.g., user deselects text)
+      // setMessages([]);
+    }
+    setInputValue("");
+  }, [initialExplanation]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +58,6 @@ export default function ChatInterface({
     setIsStreaming(true);
 
     try {
-      // Create a context-aware message with the PDF content
       const systemPrompt = `You are a helpful assistant that answers questions about a PDF document. 
       Here is the document content: ${pdfText}${
         selectedText
@@ -52,17 +65,18 @@ export default function ChatInterface({
           : ""
       }`;
 
-      // Make the API call
+      const messagesForApi = [
+        { role: "system", content: systemPrompt },
+        ...messages,
+        newUserMessage,
+      ];
+
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: selectedModel,
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages,
-            newUserMessage,
-          ],
+          messages: messagesForApi,
         }),
       });
 
@@ -70,27 +84,27 @@ export default function ChatInterface({
         throw new Error(`API error: ${response.statusText}`);
       }
 
-      // Stream the response
       const reader = response.body?.getReader();
       if (!reader) throw new Error("Response body is null");
 
-      // Initialize the response message
       const newAssistantMessage: Message = {
         role: "assistant",
         content: "",
       };
       setMessages(prev => [...prev, newAssistantMessage]);
 
+      let accumulatedContent = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        // Decode the chunk and update the message
         const chunk = new TextDecoder().decode(value);
-        newAssistantMessage.content += chunk;
+        accumulatedContent += chunk;
 
-        // Update the UI with the streaming response
-        setMessages(prev => [...prev.slice(0, -1), { ...newAssistantMessage }]);
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          { role: "assistant", content: accumulatedContent },
+        ]);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -107,67 +121,80 @@ export default function ChatInterface({
   }
 
   return (
-    <div className="flex flex-col h-full border rounded-lg shadow-sm">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-medium">Chat with your document</h2>
-        <select
-          value={selectedModel}
-          onChange={e => setSelectedModel(e.target.value as ModelName)}
-          className="px-2 py-1 text-sm border rounded"
-        >
-          {modelNames.map(model => (
-            <option key={model} value={model}>
-              {model}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div
-        className="flex-1 p-4 overflow-y-auto space-y-4"
-        style={{ minHeight: "400px", maxHeight: "500px" }}
-      >
-        {messages.length === 0 ? (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto space-y-4 p-4">
+        {messages.length === 0 && !initialExplanation && isLoading ? (
           <div className="text-center text-gray-500 py-8">
-            <p>Ask questions about your document</p>
+            <p>Generating explanation...</p>
           </div>
         ) : (
           messages.map((message, index) => (
             <div
               key={index}
-              className={`p-3 rounded-lg ${
-                message.role === "user"
-                  ? "bg-blue-100 ml-12"
-                  : "bg-white-100 mr-12"
+              className={`flex ${
+                message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              <p className="text-sm font-semibold">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <div className="mt-1 prose">
-                <ReactMarkdown>{message.content}</ReactMarkdown>
+              <div
+                className={`p-3 rounded-lg max-w-[80%] ${
+                  message.role === "user"
+                    ? "bg-blue-200 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                <div className="prose prose-sm">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t">
+      <form
+        onSubmit={handleSubmit}
+        className="p-4 border-t bg-gray-50 rounded-b-lg flex-shrink-0"
+      >
         <div className="flex gap-2">
           <input
             type="text"
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
-            placeholder="Ask a question about the document..."
-            className="flex-1 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder={
+              initialExplanation ? "Ask a follow-up..." : "Ask a question..."
+            }
+            className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             disabled={!pdfText || isStreaming}
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium transition duration-150 ease-in-out"
             disabled={!pdfText || !inputValue.trim() || isStreaming}
           >
-            {isStreaming ? "Processing..." : "Send"}
+            {isStreaming ? (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : (
+              "Send"
+            )}
           </button>
         </div>
       </form>
