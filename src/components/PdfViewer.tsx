@@ -20,6 +20,9 @@ interface PdfViewerProps {
 
 const PdfViewer: React.FC<PdfViewerProps> = ({ file, onTextSelect }) => {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  // State to store the text directly from the plugin callback
+  const [rawSelectedText, setRawSelectedText] = useState<string>("");
+  // State to track the last text passed to the parent to avoid duplicates
   const [internalSelectedText, setInternalSelectedText] = useState<
     string | null
   >(null);
@@ -29,53 +32,47 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, onTextSelect }) => {
       const url = URL.createObjectURL(file);
       setFileUrl(url);
 
-      // Clean up the object URL when the component unmounts or file changes
       return () => {
         URL.revokeObjectURL(url);
         setFileUrl(null);
+        // Reset selection state on file change
+        setRawSelectedText("");
+        setInternalSelectedText(null);
       };
     }
   }, [file]);
 
-  // Callback for the highlight plugin
-  const handleSelection = (selectedText: string) => {
-    setTimeout(() => {
-      // Use a state to track the text to avoid calling onTextSelect multiple times
-      // for the same selection end event, as renderHighlightTarget might fire rapidly.
-      if (
-        selectedText &&
-        selectedText.trim().length > 0 &&
-        selectedText !== internalSelectedText
-      ) {
-        const trimmedText = selectedText.trim();
-        setInternalSelectedText(trimmedText);
-        onTextSelect(trimmedText);
-      }
-      // If selection is cleared (empty string), reset internal state
-      if (!selectedText && internalSelectedText) {
-        setInternalSelectedText(null);
-        // Optionally call onTextSelect with null/empty string if desired
-        // onTextSelect('');
-      }
-    }, 0); // Defer state update to next tick
-  };
+  // Effect to handle selection changes after render
+  useEffect(() => {
+    const trimmedText = rawSelectedText.trim();
+
+    if (trimmedText.length > 0 && trimmedText !== internalSelectedText) {
+      // New, non-empty selection different from the last one sent
+      setInternalSelectedText(trimmedText);
+      onTextSelect(trimmedText);
+    } else if (trimmedText.length === 0 && internalSelectedText !== null) {
+      // Selection was cleared
+      setInternalSelectedText(null);
+      // Optionally inform parent about cleared selection if needed
+      // onTextSelect("");
+    }
+    // Dependencies: Run when raw text changes, or internal state changes, or the callback changes
+  }, [rawSelectedText, internalSelectedText, onTextSelect]);
 
   const renderHighlightTarget = (props: RenderHighlightTargetProps) => {
-    // Call handleSelection whenever renderHighlightTarget is invoked with new text
-    handleSelection(props.selectedText);
-
-    // Render nothing visible - we just need the callback
+    // Update the raw selected text state whenever the plugin reports a change
+    setRawSelectedText(props.selectedText);
+    // Render nothing visible - we just need the callback trigger
     return <></>;
   };
 
   const highlightPluginInstance = highlightPlugin({
     renderHighlightTarget,
-    trigger: Trigger.TextSelection, // Trigger on text selection
+    trigger: Trigger.TextSelection,
   });
 
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
-  // Use a stable pdfjs version. Find the latest compatible version if needed.
   const workerUrl = `//unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
 
   if (!fileUrl) {
@@ -84,7 +81,6 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, onTextSelect }) => {
 
   return (
     <Worker workerUrl={workerUrl}>
-      {/* Ensure the container has a defined height relative to its parent */}
       <div className="h-full w-full overflow-auto border rounded-lg max-h-full">
         <Viewer
           fileUrl={fileUrl}

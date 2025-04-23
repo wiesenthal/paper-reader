@@ -11,7 +11,8 @@ export default function Home() {
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isChatVisible, setIsChatVisible] = useState<boolean>(false);
-  const [isLoadingExplanation, setIsLoadingExplanation] = useState<boolean>(false);
+  const [isLoadingExplanation, setIsLoadingExplanation] =
+    useState<boolean>(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -23,8 +24,8 @@ export default function Home() {
     setIsChatVisible(false);
     setIsLoadingExplanation(false);
     if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
   };
 
@@ -36,7 +37,7 @@ export default function Home() {
     }
 
     if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      abortControllerRef.current.abort();
     }
 
     if (!text || text.trim().length === 0) {
@@ -91,24 +92,24 @@ export default function Home() {
           const decoder = new TextDecoder();
           while (true) {
             if (controller.signal.aborted) {
-                console.log("Fetch aborted during streaming");
-                setExplanation(null);
-                break;
+              console.log("Fetch aborted during streaming");
+              setExplanation(null);
+              break;
             }
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
             if (!controller.signal.aborted) {
-                 setExplanation(prev => (prev ?? "") + chunk);
+              setExplanation(prev => (prev ?? "") + chunk);
             } else {
-                 console.log("Fetch aborted before setting state");
-                 setExplanation(null);
-                 break;
+              console.log("Fetch aborted before setting state");
+              setExplanation(null);
+              break;
             }
           }
         } catch (error) {
-          if ((error as Error).name === 'AbortError') {
-            console.log('Fetch aborted');
+          if ((error as Error).name === "AbortError") {
+            console.log("Fetch aborted");
             setExplanation(null);
           } else {
             console.error("Error getting explanation:", error);
@@ -117,10 +118,10 @@ export default function Home() {
             );
           }
         } finally {
-            setIsLoadingExplanation(false);
-            if (abortControllerRef.current === controller) {
-                 abortControllerRef.current = null;
-            }
+          setIsLoadingExplanation(false);
+          if (abortControllerRef.current === controller) {
+            abortControllerRef.current = null;
+          }
         }
       } else {
         setSelectedText(null);
@@ -149,16 +150,16 @@ export default function Home() {
           </div>
 
           {isChatVisible && (
-            <div className="fixed bottom-6 right-6 z-10 w-96 h-[60vh] bg-white border rounded-lg shadow-xl flex flex-col">
+            <div className="fixed bottom-6 right-6 z-10 w-2xl h-[60vh] bg-white border rounded-lg shadow-xl flex flex-col">
               <button
                 onClick={() => {
-                    setIsChatVisible(false);
-                    setIsLoadingExplanation(false);
-                    if (abortControllerRef.current) {
-                        abortControllerRef.current.abort();
-                        abortControllerRef.current = null;
-                    }
-                 }}
+                  setIsChatVisible(false);
+                  setIsLoadingExplanation(false);
+                  if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                    abortControllerRef.current = null;
+                  }
+                }}
                 className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 z-20"
                 aria-label="Close chat"
               >

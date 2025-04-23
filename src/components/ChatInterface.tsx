@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { modelNames, ModelName } from "@/lib/ai/models";
+import { ModelName } from "@/lib/ai/models";
 import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css"; // Import KaTeX CSS
 
 type ChatInterfaceProps = {
   pdfText: string | null;
@@ -136,14 +139,19 @@ export default function ChatInterface({
               }`}
             >
               <div
-                className={`p-3 rounded-lg max-w-[80%] ${
+                className={`p-3 rounded-lg max-w-full ${
                   message.role === "user"
                     ? "bg-blue-200 text-white"
-                    : "bg-gray-200 text-gray-800"
+                    : "bg-gray-100 text-gray-800"
                 }`}
               >
                 <div className="prose prose-sm">
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>
