@@ -65,7 +65,7 @@ export default function Home() {
             },
             {
               role: "user" as const,
-              content: `Explain this selection: ###${text}### Do it in 5-9 words.`,
+              content: `Explain this selection: ###${text}### Do it in 7-16 words, purely to the point, concisely clarifying additional context necessary to understand the selection. Do not summarize, instead add rigorous information and definitions easy to understand.`,
             },
           ];
 

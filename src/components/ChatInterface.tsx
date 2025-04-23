@@ -179,7 +179,7 @@ export default function ChatInterface({
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium transition duration-150 ease-in-out"
             disabled={!pdfText || !inputValue.trim() || isStreaming}
           >
-            {isStreaming ? (
+            {isStreaming || isLoading ? (
               <svg
                 className="animate-spin h-5 w-5 text-white"
                 xmlns="http://www.w3.org/2000/svg"
